@@ -745,8 +745,7 @@ class FlagRegistryLock {
 
 void FlagRegistry::RegisterFlag(CommandLineFlag* flag) {
   Lock();
-  pair<FlagIterator, bool> ins =
-    flags_.insert(pair<const char*, CommandLineFlag*>(flag->name(), flag));
+  pair<FlagIterator, bool> ins = flags_.insert(pair<const char*, CommandLineFlag*>(flag->name(), flag));
   if (ins.second == false) {   // means the name was already in the map
     if (strcmp(ins.first->second->filename(), flag->filename()) != 0) {
       ReportError(DIE, "ERROR: flag '%s' was defined more than once "
@@ -762,6 +761,7 @@ void FlagRegistry::RegisterFlag(CommandLineFlag* flag) {
                   flag->filename(), flag->filename());
     }
   }
+
   // Also add to the flags_by_ptr_ map.
   flags_by_ptr_[flag->current_->value_buffer_] = flag;
   Unlock();
@@ -1455,18 +1455,18 @@ bool AddFlagValidator(const void* flag_ptr, ValidateFnProto validate_fn_proto) {
 // --------------------------------------------------------------------
 
 namespace {
+
 void RegisterCommandLineFlag(const char* name,
                              const char* help,
                              const char* filename,
                              FlagValue* current,
                              FlagValue* defvalue) {
-  if (help == NULL)
-    help = "";
+  if (help == NULL) help = "";
   // Importantly, flag_ will never be deleted, so storage is always good.
-  CommandLineFlag* flag =
-      new CommandLineFlag(name, help, filename, current, defvalue);
+  CommandLineFlag* flag = new CommandLineFlag(name, help, filename, current, defvalue);
   FlagRegistry::GlobalRegistry()->RegisterFlag(flag);  // default registry
 }
+
 }
 
 template <typename FlagType>
@@ -1968,13 +1968,16 @@ bool RegisterFlagValidator(const string* flag,
 //    the parsing of the flags and the printing of any help output.
 // --------------------------------------------------------------------
 
+//= parse impl
 static uint32 ParseCommandLineFlagsInternal(int* argc, char*** argv,
                                             bool remove_flags, bool do_report) {
   SetArgv(*argc, const_cast<const char**>(*argv));    // save it for later
 
+  //= 用FlagRegistry单例对象构造Parser
   FlagRegistry* const registry = FlagRegistry::GlobalRegistry();
   CommandLineFlagParser parser(registry);
 
+  //= do parse. --flagfile, env, --tryfromenv
   // When we parse the commandline flags, we'll handle --flagfile,
   // --tryfromenv, etc. as we see them (since flag-evaluation order
   // may be important).  But sometimes apps set FLAGS_tryfromenv/etc.
@@ -1998,9 +2001,11 @@ static uint32 ParseCommandLineFlagsInternal(int* argc, char*** argv,
 
   if (parser.ReportErrors())        // may cause us to exit on illegal flags
     gflags_exitfunc(1);
+
   return r;
 }
 
+//= gflags entry
 uint32 ParseCommandLineFlags(int* argc, char*** argv, bool remove_flags) {
   return ParseCommandLineFlagsInternal(argc, argv, remove_flags, true);
 }

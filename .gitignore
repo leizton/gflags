@@ -22,3 +22,9 @@ CMakeLists.txt.user
 /bazel-gflags
 /bazel-out
 /bazel-testlogs
+
+.vscode/*
+.idea/*
+.build/*
+mytest/bazel*
+cmake-build-debug/*
